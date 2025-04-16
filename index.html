@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Signal Visualizer</title>
+    <!-- Use Chart.js v3.9.1 (more stable for simple usage) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <style>
+      body {
+        background-color: #f5f5f7;
+        font-family: -apple-system, BlinkMacSystemFont, "San Francisco",
+          "Segoe UI", Roboto, sans-serif;
+        color: #1c1c1e;
+        padding: 40px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      h1 {
+        font-size: 2rem;
+        color: #1c1c1e;
+        margin-bottom: 30px;
+      }
+
+      label {
+        font-size: 1rem;
+        margin-right: 10px;
+      }
+
+      input {
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        padding: 10px 14px;
+        font-size: 1rem;
+        width: 160px;
+        background-color: #fff;
+        transition: box-shadow 0.2s ease;
+      }
+
+      input:focus {
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.3);
+        border-color: #007aff;
+      }
+
+      button {
+        background-color: #007aff;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 10px;
+        font-size: 1rem;
+        margin-left: 10px;
+        cursor: pointer;
+        transition: background-color 0.3s ease, transform 0.2s ease;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      button:hover {
+        background-color: #005fdb;
+        transform: scale(1.03);
+      }
+
+      canvas {
+        margin-top: 40px;
+        background-color: white;
+        border-radius: 12px;
+        border: 1px solid #e0e0e0;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        padding: 20px;
+      }
+
+      .input-group {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 20px;
+      }
+
+      .input-group label {
+        margin-bottom: 0;
+      }
+    </style>
+  </head>
+  <body style="font-family: sans-serif; padding: 20px">
+    <h1>📡 Signal Visualizer (BPSK Modulation)</h1>
+
+    <div class="input-group">
+      <label for="textInput">Enter a message:</label>
+      <input id="textInput" value="HI" />
+      <button onclick="generateSignal()">Visualize</button>
+    </div>
+
+    <br /><br />
+    <canvas id="signalChart" width="1000" height="400"></canvas>
+
+    <script>
+      function textToBinary(text) {
+        return text
+          .split("")
+          .map((char) => char.charCodeAt(0).toString(2).padStart(8, "0"))
+          .join("");
+      }
+
+      function generateSignal() {
+        const message = document.getElementById("textInput").value;
+        const binary = textToBinary(message);
+
+        const signal = [];
+        const labels = [];
+
+        const samplesPerBit = 50;
+        const freq = (2 * Math.PI) / samplesPerBit;
+
+        for (let i = 0; i < binary.length; i++) {
+          const bit = binary[i] === "1" ? 1 : -1;
+          for (let j = 0; j < samplesPerBit; j++) {
+            const t = j + i * samplesPerBit;
+            signal.push(bit * Math.cos(freq * j));
+            labels.push(t);
+          }
+        }
+
+        const ctx = document.getElementById("signalChart").getContext("2d");
+        if (window.myChart) window.myChart.destroy();
+
+        window.myChart = new Chart(ctx, {
+          type: "line",
+          data: {
+            labels: labels,
+            datasets: [
+              {
+                label: "Modulated Signal (BPSK)",
+                data: signal,
+                borderColor: "#007aff",
+                borderWidth: 3,
+                pointRadius: 0,
+                fill: false,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            scales: {
+              x: {
+                display: true,
+                title: { display: true, text: "Time" },
+              },
+              y: {
+                display: true,
+                title: { display: true, text: "Amplitude" },
+              },
+            },
+          },
+        });
+      }
+
+      window.onload = generateSignal;
+    </script>
+  </body>
+</html>
